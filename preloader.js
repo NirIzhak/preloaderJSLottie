@@ -1,6 +1,4 @@
     document.addEventListener("DOMContentLoaded", function () {
-        const API_URL_TO_WAIT_FOR = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all"; // Change to your API endpoint
-
         const overlay = document.createElement('div');
         overlay.id = 'loader';
         overlay.style.cssText = `
@@ -43,13 +41,13 @@
             }
         });
 
-        // Function to show loader
+        // Function to show the loader
         window.showLoader = function () {
             overlay.style.display = 'flex';
             lottieContainer.style.display = 'block';
         };
 
-        // Function to hide loader
+        // Function to hide the loader
         window.hideLoader = function () {
             setTimeout(() => {
                 overlay.style.display = 'none';
@@ -57,53 +55,16 @@
             }, 500); // Delay for smooth transition
         };
 
-        // Track API call status
-        window.apiCallInProgress = false;
-
-        // Intercept fetch requests to detect when API call starts
-        (function () {
-            const originalFetch = window.fetch;
-            window.fetch = async function (...args) {
-                const requestUrl = args[0];
-
-                // If this is the API call we are waiting for, show the loader
-                if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
-                    window.apiCallInProgress = true;
-                    window.showLoader();
-                }
-
-                try {
-                    const response = await originalFetch(...args);
-
-                    // When the API call completes successfully, hide the loader
-                    if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
-                        window.apiCallInProgress = false;
-                        window.hideLoader();
-                    }
-
-                    return response;
-                } catch (error) {
-                    if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
-                        window.apiCallInProgress = false;
-                        window.hideLoader(); // Hide loader even if API fails
-                    }
-                    throw error;
-                }
-            };
-        })();
-
-        // Auto-show loader on page load
+        // Show loader on page load
         window.showLoader();
 
-        // Prevent hiding too soon
-        window.addEventListener('load', function () {
-            setTimeout(() => {
-                if (!window.apiCallInProgress) {
-                    window.hideLoader();
-                }
-            }, 2000); // Minimum loader display time
-        });
+        // Ensure loader stays visible until API call completes
+        window.apiCallInProgress = false;
 
-        // Fallback timeout to hide loader after 15 seconds max
-        setTimeout(window.hideLoader, 15000);
+        // Automatically hide loader after a max timeout
+        setTimeout(() => {
+            if (!window.apiCallInProgress) {
+                window.hideLoader();
+            }
+        }, 15000); // Failsafe: Hide loader after 15 seconds
     });
