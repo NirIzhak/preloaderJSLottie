@@ -1,4 +1,3 @@
-<script>
     document.addEventListener("DOMContentLoaded", function () {
         const overlay = document.createElement('div');
         overlay.id = 'loader';
@@ -56,4 +55,3 @@
         // Extra check for slow-loading content
         setTimeout(hideOverlay, 10000); // Max timeout to hide after 10s
     });
-</script>
