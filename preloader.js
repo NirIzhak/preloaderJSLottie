@@ -70,6 +70,6 @@ function hideOverlay() {
 
 // Call your APIs here and wait for completion
 window.addEventListener('load', () => {
-    fetchData('https://api.example.com/data1', 1);
-    fetchData('https://api.example.com/data2', 2);
+    fetchData('https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all', 1);
+    fetchData('https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_structure', 2);
 });
