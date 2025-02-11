@@ -1,4 +1,3 @@
-
 const overlay = document.createElement('div');
 overlay.id = 'loader';
 overlay.style.cssText = `
@@ -10,8 +9,8 @@ overlay.style.cssText = `
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.7);
-    z-index: 999;
+    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
+    z-index: 9999;
 `;
 
 const lottieContainer = document.createElement('div');
@@ -27,14 +26,14 @@ lottieContainer.style.cssText = `
     overflow: hidden;
 `;
 
+overlay.appendChild(lottieContainer);
 document.body.appendChild(overlay);
-document.body.appendChild(lottieContainer);
 
 // Track API Call Completion
 let api1Completed = false;
 let api2Completed = false;
 
-// Define the API endpoints you want to wait for
+// Define the API endpoints to track
 const API_1_URL = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all"; // Replace with your actual endpoint
 const API_2_URL = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_structure"; // Replace with your actual endpoint
 
@@ -64,9 +63,13 @@ window.fetch = async function (...args) {
 
 // Hide overlay when both APIs are done
 function hideOverlay() {
-    overlay.style.display = 'none';
-    lottieContainer.style.display = 'block';
+    overlay.style.opacity = "0"; // Fade out
+    setTimeout(() => {
+        overlay.remove(); // Remove from DOM
+    }, 500); // Delay for fade-out effect
 
+    lottieContainer.style.display = 'block';
+    
     lottie.loadAnimation({
         container: lottieContainer,
         renderer: 'svg',
