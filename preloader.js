@@ -1,4 +1,6 @@
     document.addEventListener("DOMContentLoaded", function () {
+        const API_URL_TO_WAIT_FOR = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all"; // Change to your API endpoint
+
         const overlay = document.createElement('div');
         overlay.id = 'loader';
         overlay.style.cssText = `
@@ -41,33 +43,67 @@
             }
         });
 
-        // Function to show the loader
+        // Function to show loader
         window.showLoader = function () {
             overlay.style.display = 'flex';
             lottieContainer.style.display = 'block';
         };
 
-        // Function to hide the loader
+        // Function to hide loader
         window.hideLoader = function () {
             setTimeout(() => {
                 overlay.style.display = 'none';
                 lottieContainer.style.display = 'none';
-            }, 500); // Delay to ensure smooth transition
+            }, 500); // Delay for smooth transition
         };
 
-        // Automatically show loader on page load
-        showLoader();
+        // Track API call status
+        window.apiCallInProgress = false;
 
-        // Prevent hiding the loader too soon
+        // Intercept fetch requests to detect when API call starts
+        (function () {
+            const originalFetch = window.fetch;
+            window.fetch = async function (...args) {
+                const requestUrl = args[0];
+
+                // If this is the API call we are waiting for, show the loader
+                if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
+                    window.apiCallInProgress = true;
+                    window.showLoader();
+                }
+
+                try {
+                    const response = await originalFetch(...args);
+
+                    // When the API call completes successfully, hide the loader
+                    if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
+                        window.apiCallInProgress = false;
+                        window.hideLoader();
+                    }
+
+                    return response;
+                } catch (error) {
+                    if (requestUrl.includes(API_URL_TO_WAIT_FOR)) {
+                        window.apiCallInProgress = false;
+                        window.hideLoader(); // Hide loader even if API fails
+                    }
+                    throw error;
+                }
+            };
+        })();
+
+        // Auto-show loader on page load
+        window.showLoader();
+
+        // Prevent hiding too soon
         window.addEventListener('load', function () {
             setTimeout(() => {
-                // Wait for API response
                 if (!window.apiCallInProgress) {
-                    hideLoader();
+                    window.hideLoader();
                 }
-            }, 2000); // Minimum time loader stays visible
+            }, 2000); // Minimum loader display time
         });
 
-        // Fallback timeout in case API takes too long
-        setTimeout(hideLoader, 15000); // Auto-hide after 15 seconds max
+        // Fallback timeout to hide loader after 15 seconds max
+        setTimeout(window.hideLoader, 15000);
     });
