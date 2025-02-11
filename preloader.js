@@ -1,76 +1,115 @@
-    document.addEventListener("DOMContentLoaded", function () {
-        const overlay = document.createElement('div');
-        overlay.id = 'loader';
-        overlay.style.cssText = `
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
-            z-index: 999;
-        `;
+// Create overlay and container elements
+const overlay = document.createElement('div');
+overlay.id = 'loader';
+overlay.style.cssText = `
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 999;
+`;
 
-        const lottieContainer = document.createElement('div');
-        lottieContainer.id = 'lottieContainer';
-        lottieContainer.style.cssText = `
-            width: 64px;
-            height: 64px;
-            display: block;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            overflow: hidden;
-        `;
+const lottieContainer = document.createElement('div');
+lottieContainer.id = 'lottieContainer';
+lottieContainer.style.cssText = `
+    width: 64px;
+    height: 64px;
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+`;
 
-        document.body.appendChild(overlay);
-        document.body.appendChild(lottieContainer);
+document.body.appendChild(overlay);
+document.body.appendChild(lottieContainer);
 
-        const animation = lottie.loadAnimation({
-            container: lottieContainer,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            path: 'https://NirIzhak.github.io/preloaderJSLottie/JVGIsylS3F-3.json',
-            rendererSettings: {
-                preserveAspectRatio: 'xMidYMid meet'
+// Initialize Lottie animation
+const animation = lottie.loadAnimation({
+    container: lottieContainer,
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    path: 'https://NirIzhak.github.io/preloaderJSLottie/JVGIsylS3F-3.json',
+    rendererSettings: {
+        preserveAspectRatio: 'xMidYMid meet'
+    }
+});
+
+// Create a promise that resolves when the page is loaded
+const pageLoadPromise = new Promise(resolve => {
+    if (document.readyState === 'complete') {
+        resolve();
+    } else {
+        window.addEventListener('load', resolve);
+    }
+});
+
+// Function to track API calls
+let pendingApiCalls = 0;
+const apiPromises = [];
+
+// Intercept fetch calls
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+    pendingApiCalls++;
+    const promise = originalFetch.apply(this, args)
+        .finally(() => {
+            pendingApiCalls--;
+            if (pendingApiCalls === 0) {
+                apiPromises.push(Promise.resolve());
             }
         });
+    apiPromises.push(promise);
+    return promise;
+};
 
-        // Function to show the loader
-        window.showLoader = function () {
-            window.apiCallInProgress = true;
-            overlay.style.display = 'flex';
-            lottieContainer.style.display = 'block';
-        };
-
-        // Function to hide the loader **immediately when API finishes**
-        window.hideLoader = function () {
-            if (!window.apiCallInProgress) {
-                overlay.style.display = 'none';
-                lottieContainer.style.display = 'none';
+// Intercept XMLHttpRequest
+const originalXHR = window.XMLHttpRequest;
+window.XMLHttpRequest = function() {
+    const xhr = new originalXHR();
+    const originalOpen = xhr.open;
+    
+    xhr.open = function(...args) {
+        pendingApiCalls++;
+        xhr.addEventListener('loadend', () => {
+            pendingApiCalls--;
+            if (pendingApiCalls === 0) {
+                apiPromises.push(Promise.resolve());
             }
-        };
+        });
+        return originalOpen.apply(xhr, args);
+    };
+    
+    return xhr;
+};
 
-        // Show loader on page load
-        window.showLoader();
+// Function to hide overlay when everything is ready
+function hideOverlay() {
+    overlay.style.display = 'none';
+    document.body.style.visibility = 'visible';
+}
 
-        // **Ensure Loader Stays Until API Call Completes**
-        let checkLoaderInterval = setInterval(() => {
-            if (!window.apiCallInProgress) {
-                clearInterval(checkLoaderInterval); // **Stop checking once API is done**
-                window.hideLoader();
-            }
-        }, 500); // **Check more frequently (every 0.5 seconds) for faster response**
+// Hide page content initially
+document.body.style.visibility = 'hidden';
 
-        // Fallback: Hide loader after **30 seconds max** (in case API hangs)
+// Wait for both page load and API calls to complete
+Promise.all([pageLoadPromise, ...apiPromises])
+    .then(() => {
+        // Add a small delay to ensure all API calls are truly complete
         setTimeout(() => {
-            window.apiCallInProgress = false;
-            clearInterval(checkLoaderInterval); // **Stop interval if fallback is triggered**
-            window.hideLoader();
-        }, 30000); // Adjust timeout if necessary
+            if (pendingApiCalls === 0) {
+                hideOverlay();
+            }
+        }, 100);
+    })
+    .catch(error => {
+        console.error('Error during loading:', error);
+        hideOverlay(); // Hide overlay even if there's an error
     });
