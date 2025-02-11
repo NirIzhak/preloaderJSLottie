@@ -48,30 +48,29 @@
             lottieContainer.style.display = 'block';
         };
 
-        // Function to hide the loader **only if the API call is finished**
+        // Function to hide the loader **immediately when API finishes**
         window.hideLoader = function () {
-            setTimeout(() => {
-                if (!window.apiCallInProgress) {
-                    overlay.style.display = 'none';
-                    lottieContainer.style.display = 'none';
-                }
-            }, 500); // Small delay for smooth transition
+            if (!window.apiCallInProgress) {
+                overlay.style.display = 'none';
+                lottieContainer.style.display = 'none';
+            }
         };
 
         // Show loader on page load
         window.showLoader();
 
-        // **Fix: Ensure Loader Stays Until API Call Completes**
+        // **Ensure Loader Stays Until API Call Completes**
         let checkLoaderInterval = setInterval(() => {
             if (!window.apiCallInProgress) {
+                clearInterval(checkLoaderInterval); // **Stop checking once API is done**
                 window.hideLoader();
-                clearInterval(checkLoaderInterval);
             }
-        }, 1000); // Check every second if the API has finished
+        }, 500); // **Check more frequently (every 0.5 seconds) for faster response**
 
         // Fallback: Hide loader after **30 seconds max** (in case API hangs)
         setTimeout(() => {
             window.apiCallInProgress = false;
+            clearInterval(checkLoaderInterval); // **Stop interval if fallback is triggered**
             window.hideLoader();
-        }, 30000); // Increase timeout if necessary
+        }, 30000); // Adjust timeout if necessary
     });
