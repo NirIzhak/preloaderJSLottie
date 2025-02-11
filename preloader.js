@@ -1,3 +1,4 @@
+
 const overlay = document.createElement('div');
 overlay.id = 'loader';
 overlay.style.cssText = `
@@ -33,23 +34,33 @@ document.body.appendChild(lottieContainer);
 let api1Completed = false;
 let api2Completed = false;
 
+// Define the API endpoints you want to wait for
+const API_1_URL = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all"; // Replace with your actual endpoint
+const API_2_URL = "https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_structure"; // Replace with your actual endpoint
+
 function checkIfBothApisCompleted() {
     if (api1Completed && api2Completed) {
         hideOverlay();
     }
 }
 
-// Mock API Call Function
-async function fetchData(apiUrl, apiNumber) {
-    try {
-        await fetch(apiUrl); // Simulating API call
-        if (apiNumber === 1) api1Completed = true;
-        if (apiNumber === 2) api2Completed = true;
-        checkIfBothApisCompleted();
-    } catch (error) {
-        console.error(`API ${apiNumber} failed:`, error);
+// Hook into fetch API to monitor when APIs are called
+const originalFetch = window.fetch;
+window.fetch = async function (...args) {
+    const response = await originalFetch(...args);
+    const url = args[0];
+
+    // Check if the response URL matches one of the APIs
+    if (url.includes(API_1_URL)) {
+        api1Completed = true;
     }
-}
+    if (url.includes(API_2_URL)) {
+        api2Completed = true;
+    }
+
+    checkIfBothApisCompleted();
+    return response;
+};
 
 // Hide overlay when both APIs are done
 function hideOverlay() {
@@ -67,9 +78,3 @@ function hideOverlay() {
         }
     });
 }
-
-// Call your APIs here and wait for completion
-window.addEventListener('load', () => {
-    fetchData('https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_calls_all', 1);
-    fetchData('https://zlkzoemaqpyaumsknadt.supabase.co/rest/v1/rpc/get_user_structure', 2);
-});
