@@ -41,17 +41,33 @@
             }
         });
 
-        function hideOverlay() {
+        // Function to show the loader
+        window.showLoader = function () {
+            overlay.style.display = 'flex';
+            lottieContainer.style.display = 'block';
+        };
+
+        // Function to hide the loader
+        window.hideLoader = function () {
             setTimeout(() => {
                 overlay.style.display = 'none';
                 lottieContainer.style.display = 'none';
-            }, 500); // Small delay to ensure visibility before hiding
-        }
+            }, 500); // Delay to ensure smooth transition
+        };
 
+        // Automatically show loader on page load
+        showLoader();
+
+        // Prevent hiding the loader too soon
         window.addEventListener('load', function () {
-            setTimeout(hideOverlay, 2000); // Keep the loader visible for at least 2s after load
+            setTimeout(() => {
+                // Wait for API response
+                if (!window.apiCallInProgress) {
+                    hideLoader();
+                }
+            }, 2000); // Minimum time loader stays visible
         });
 
-        // Extra check for slow-loading content
-        setTimeout(hideOverlay, 10000); // Max timeout to hide after 10s
+        // Fallback timeout in case API takes too long
+        setTimeout(hideLoader, 15000); // Auto-hide after 15 seconds max
     });
