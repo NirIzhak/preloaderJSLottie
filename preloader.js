@@ -18,7 +18,7 @@ lottieContainer.id = 'lottieContainer';
 lottieContainer.style.cssText = `
     width: 64px;
     height: 64px;
-    display: none;
+    display: block;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -27,22 +27,25 @@ lottieContainer.style.cssText = `
 `;
 
 document.body.appendChild(overlay);
-document.body.appendChild(lottieContainer);
+overlay.appendChild(lottieContainer); // Append lottie inside the overlay
 
+// Load the Lottie animation
+lottie.loadAnimation({
+    container: lottieContainer,
+    renderer: 'svg', // 'canvas' if you prefer
+    loop: true,
+    autoplay: true,
+    path: 'https://NirIzhak.github.io/preloaderJSLottie/JVGIsylS3F-3.json',
+    rendererSettings: {
+        preserveAspectRatio: 'xMidYMid meet' // Keeps animation correctly sized
+    }
+});
+
+// Function to hide the loader after 8 seconds
 function hideOverlay() {
-    overlay.style.display = 'none';
-    lottieContainer.style.display = 'block';
-
-    lottie.loadAnimation({
-        container: lottieContainer,
-        renderer: 'svg', // 'canvas' if you prefer
-        loop: true,
-        autoplay: true,
-        path: 'https://NirIzhak.github.io/preloaderJSLottie/JVGIsylS3F-3.json',
-        rendererSettings: {
-            preserveAspectRatio: 'xMidYMid meet' // Keeps animation correctly sized
-        }
-    });
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 8000); // 8000ms = 8 seconds
 }
 
 window.addEventListener('load', hideOverlay);
