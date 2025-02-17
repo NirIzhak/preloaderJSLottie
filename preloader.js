@@ -1,6 +1,6 @@
 const overlay = document.createElement('div');
 overlay.id = 'loader';
-overlay.style.cssText = 
+overlay.style.cssText = `
     display: flex;
     justify-content: center;
     align-items: center;
@@ -11,11 +11,11 @@ overlay.style.cssText =
     height: 100%;
     background-color: rgba(255, 255, 255, 0.7);
     z-index: 999;
-;
+`;
 
 const lottieContainer = document.createElement('div');
 lottieContainer.id = 'lottieContainer';
-lottieContainer.style.cssText = 
+lottieContainer.style.cssText = `
     width: 64px;
     height: 64px;
     display: none;
@@ -24,7 +24,7 @@ lottieContainer.style.cssText =
     left: 50%;
     transform: translate(-50%, -50%);
     overflow: hidden;
-;
+`;
 
 document.body.appendChild(overlay);
 document.body.appendChild(lottieContainer);
